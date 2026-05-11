@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Maze Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen active">
+        <div class="setup-container">
+            <h1>AI Maze Game</h1>
+            <p class="subtitle">Navigate the maze before time runs out!</p>
+            <div class="form-group">
+                <label for="player-name">Your Name</label>
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="20" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Difficulty</label>
+                <div class="difficulty-buttons">
+                    <button class="diff-btn" data-diff="easy">Easy<span>10×10 · 60s</span></button>
+                    <button class="diff-btn active" data-diff="medium">Medium<span>20×20 · 90s</span></button>
+                    <button class="diff-btn" data-diff="hard">Hard<span>30×30 · 120s</span></button>
+                </div>
+            </div>
+            <button id="start-btn" class="btn-primary">Start Game</button>
+            <p class="controls-info">Arrow keys to move &nbsp;·&nbsp; H = hint &nbsp;·&nbsp; S = solution &nbsp;·&nbsp; R = restart</p>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="hud">
+            <div class="hud-left">
+                <span id="player-display">Player</span>
+                <span id="difficulty-display" class="badge">Medium</span>
+            </div>
+            <div class="hud-center">
+                <div id="timer-display" class="timer">90</div>
+                <div class="timer-label">seconds</div>
+            </div>
+            <div class="hud-right">
+                <div class="stat"><span id="moves-count">0</span><small>moves</small></div>
+                <div class="stat"><span id="hints-count">3</span><small>hints</small></div>
+            </div>
+        </div>
+        <div id="canvas-wrapper">
+            <canvas id="maze-canvas"></canvas>
+            <div id="message-overlay"></div>
+        </div>
+        <div class="controls-bar">
+            <button onclick="sendHint()" class="ctrl-btn">H — Hint</button>
+            <button onclick="sendToggleSolution()" class="ctrl-btn">S — Solution</button>
+            <button onclick="restartGame()" class="ctrl-btn">R — Restart</button>
+            <button onclick="showSetup()" class="ctrl-btn">Menu</button>
+        </div>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="screen">
+        <div class="end-container">
+            <div id="end-icon"></div>
+            <h2 id="end-title"></h2>
+            <p id="end-subtitle"></p>
+            <div id="stats-grid" class="stats-grid"></div>
+            <div class="end-buttons">
+                <button onclick="restartGame()" class="btn-primary">Play Again</button>
+                <button onclick="showSetup()" class="btn-secondary">Change Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='game.js') }}"></script>
+</body>
+</html>
