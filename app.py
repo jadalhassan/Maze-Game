@@ -4,10 +4,20 @@ import heapq
 import time
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
+import requests as http
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'maze-secret-key'
 socketio = SocketIO(app, cors_allowed_origins='*')
+
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://souqcemmpbegwzhpwgqg.supabase.co')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', 'sb_publishable_VKhkdJgZomb5zfQgWwv5hw_qsU4dLMf')
+SUPABASE_HEADERS = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': f'Bearer {SUPABASE_KEY}',
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal',
+}
 
 DIFFICULTY = {
     'easy':   {'width': 10, 'height': 10, 'time': 60},
@@ -270,7 +280,7 @@ def handle_disconnect():
 def _build_end_data(g, won):
     acc = (g['correct_moves'] / g['move_count'] * 100) if g['move_count'] else 0
     cfg = DIFFICULTY.get(g['difficulty'], DIFFICULTY['medium'])
-    return {
+    data = {
         'won': won,
         'time_remaining': g['time_remaining'],
         'move_count': g['move_count'],
@@ -280,6 +290,27 @@ def _build_end_data(g, won):
         'solution_views': g['solution_views'],
         'optimal_path': len(g['solution']),
     }
+    try:
+        http.post(
+            f'{SUPABASE_URL}/rest/v1/game_sessions',
+            json={
+                'player_name': g['name'],
+                'difficulty': g['difficulty'],
+                'won': won,
+                'time_used': data['time_used'],
+                'time_remaining': g['time_remaining'],
+                'move_count': g['move_count'],
+                'path_accuracy': data['path_accuracy'],
+                'hint_uses': g['hint_uses'],
+                'solution_views': g['solution_views'],
+                'optimal_path': data['optimal_path'],
+            },
+            headers=SUPABASE_HEADERS,
+            timeout=5,
+        )
+    except Exception as e:
+        print(f'[DB] Failed to save session: {e}')
+    return data
 
 
 if __name__ == '__main__':
