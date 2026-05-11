@@ -4,7 +4,8 @@ import heapq
 import time
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
-import requests as http
+import json
+import urllib.request
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'maze-secret-key'
@@ -291,23 +292,25 @@ def _build_end_data(g, won):
         'optimal_path': len(g['solution']),
     }
     try:
-        http.post(
+        payload = json.dumps({
+            'player_name': g['name'],
+            'difficulty': g['difficulty'],
+            'won': won,
+            'time_used': data['time_used'],
+            'time_remaining': g['time_remaining'],
+            'move_count': g['move_count'],
+            'path_accuracy': data['path_accuracy'],
+            'hint_uses': g['hint_uses'],
+            'solution_views': g['solution_views'],
+            'optimal_path': data['optimal_path'],
+        }).encode()
+        req = urllib.request.Request(
             f'{SUPABASE_URL}/rest/v1/game_sessions',
-            json={
-                'player_name': g['name'],
-                'difficulty': g['difficulty'],
-                'won': won,
-                'time_used': data['time_used'],
-                'time_remaining': g['time_remaining'],
-                'move_count': g['move_count'],
-                'path_accuracy': data['path_accuracy'],
-                'hint_uses': g['hint_uses'],
-                'solution_views': g['solution_views'],
-                'optimal_path': data['optimal_path'],
-            },
-            headers=SUPABASE_HEADERS,
-            timeout=5,
+            data=payload,
+            headers={**SUPABASE_HEADERS, 'Content-Length': str(len(payload))},
+            method='POST',
         )
+        urllib.request.urlopen(req, timeout=5)
     except Exception as e:
         print(f'[DB] Failed to save session: {e}')
     return data
